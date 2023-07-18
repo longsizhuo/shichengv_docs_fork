@@ -532,7 +532,7 @@ typedef struct {
 
 `d_tag`：决定这个是什么类别的信息，以及如何解析 `d_un` 内部变量
 
-[Dynamic Section]([动态节 - 链接程序和库指南](https://docs.oracle.com/cd/E26926_01/html/E25910/chapter6-42444.html#scrolltoc)) 介绍了所有的`d_tag` 类别，[英文版请点击这个]([Dynamic Section - Linker and Libraries Guide](https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-42444.html))
+[动态节 - 链接程序和库指南](https://docs.oracle.com/cd/E26926_01/html/E25910/chapter6-42444.html#scrolltoc) 介绍了所有的`d_tag` 类别，[英文版请点击这个](https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter6-42444.html)
 
 ### link_map
 
