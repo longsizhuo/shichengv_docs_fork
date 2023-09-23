@@ -52,7 +52,7 @@ Intel PT还可以配置为使用PTWRITE记录由软件生成的数据包，以�
 
 表格33-1展示了导致跟踪的数据分组生成的COFI事件:
 
-![Alt text](./img/image.png)
+![](./img/image.png)
 
 ***NOTE:*** 最下方有关于指令的简单补充，来自与Intel文档，可以简单参考下，详细信息请翻阅《Intel软件开发人员手册第二卷》。
 
