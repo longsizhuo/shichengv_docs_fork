@@ -247,7 +247,7 @@ link_map 结构体定义: [struct link_map](https://codebrowser.dev/glibc/glibc/
 
 这是一张非常重要的图(自己画的，如果有误及时联系我更正，仓库也给出了图层源文件，可以自己修改导出)，GNU/Linux管理对象的逻辑基本上如下图所示(还有很多细节，不过碍于本人水平，时间等其他因素，只能做到这里了。)
 
-![dlopen](img/dlopen.png)
+![dlopen](./img/dlopen.png)
 
 下面展示了`dlopen`函数原型
 
@@ -445,7 +445,7 @@ no more namespaces available for dlmopen()"));
 GL(dl_ns)[nsid].libc_map = NULL;
 ```
 
-![struct link_namespace](linking_img/9d2064827e11170c9410b6634b05e80e47a81bc9.png)
+![struct link_namespace](./img/struct_link_namespaces.png)
 
 这段看不懂没关系，只是先留个印象，由于 `struct link_namespace` 结构体比较复杂，现在只是先留个印象。等看到后面自然就明白了。
 
@@ -750,7 +750,7 @@ struct libname_list
 
 下面这个矩形展示了新申请的内存，new->l_libname 和 newname 都指向一个 `struct libname_list`结构体，其中该结构体中的 `libname_list::name` 成员指向`libname[]`
 
-![new](linking_img/80acd790a3a0b0d27c988dee518ef1b646e0db66.png)
+![new](./img/_dl_new_object.png)
 
 接着
 
@@ -763,7 +763,7 @@ struct libname_list
   if (GL(dl_ns)[nsid]._ns_loaded != NULL)
     /* Add the global scope.  */
     // 将我们需要加载的 libsum.so 对象的 l_scope 的第一个成员指向我们prog2程序的
-    // DT_NEED 列表，也就是 prog2 的 link_map::l_searchlist 地址
+    // DT_NEEDED 列表，也就是 prog2 的 link_map::l_searchlist 地址
     new->l_scope[idx++] = &GL(dl_ns)[nsid]._ns_loaded->l_searchlist;
 
   /* If we have no loader the new object acts as it.  */
@@ -791,11 +791,11 @@ struct libname_list
 
 如果同时将mode设置 RTLD_DEEPBIND，就会把全局的l_scope的第二个成员(**指向r_scope_elem结构体的指针**)同样设置为第一个成员的值。
 
-将第一个成员的值指向该link_map对象的DT_NEED搜查表。并同样初始化l_local_scope成员。
+将第一个成员的值指向该link_map对象的DT_NEEDED搜查表。并同样初始化l_local_scope成员。
 
 关于这些成员的作用，可以简单看下这个图：
 
-![link_map](linking_img/4cb084b346d6adc90b7ce76b96c7292067840539.png)
+![link_map](./img/struct_link_map_for_dlopen.png)
 
 后面代码对于我们的目的不是很重要，有兴趣可以看注释。
 
@@ -844,7 +844,7 @@ _dl_add_to_namespace_list (struct link_map *new, Lmid_t nsid)
 
 该函数比较简单，就是查找在全局变量`_dl_ns` 的结构体中查找我们的运行文件 prog2 的 link_map，将新建的libsum.so库的信息添加到该链表的末尾。如果指向prog2对象的link_map指针为 NULL，就把本来属于 prog2 的位置替换成当前运行的库的对象的link_map位置。将全局变量 _dl_ns中存储的 prog2 的信息中的 _ns_nloaded 结果 + 1。
 
-![libsum](linking_img/18a815fdd3674f82545e5b61e8efc135049ed8af.png)
+![libsum](./img/_insert_libsum.png)
 
 后面就不说了，该函数返回，退回到 dl_open_worker_begin
 
