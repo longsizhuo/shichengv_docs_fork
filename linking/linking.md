@@ -1,4 +1,8 @@
-# 链接与加载
+# 介绍链接与加载 
+
+## 序言
+
+介绍可执行文件的链接与加载。假设你有C语言基础。
 
 ## 基础部分
 
@@ -110,14 +114,7 @@ int main(){
 gcc -Og -o prog main.c sum.c multvec.c addvec.c
 ```
 
-同样，也可以使用下面这几条语句来替代。
-
-```bash
-cpp main.c main.i && cpp sum.c sum.i && cpp addvec.c addvec.i && cpp multvec.c multvec.i && 
-ccl main.i -Og -o main.s && ccl sum.i -Og -o sum.s && ccl addvec.i -Og -o addvec.s && ccl multvec.i -Og -o multvec.s &&  
-as -o main.o main.s && as -o sum.o sum.s && as -o addvec.o addvec.s && as -o multvec.o multvec.s && 
-ld -o prog main.o sum.o addvec.o multvec.o
-```
+gcc 主要使用了4个工具`cpp`, `ccl`, `as` 和 `ld`。
 
 首先 C预处理器(C preprocessor)，被称为cpp，是一个宏处理器，再C编译器编译程序之前，它会自动的展开源代码的宏，以及将include文件添加进来。它只能被用来处理C，C++，和Objective-C源码文件。
 
@@ -211,13 +208,129 @@ Disassembly of section .text:
 
 对于一些需要跳转的指令，比如`call`指令，`1e:   e8 00 00 00 00          call   23 <main+0x23>`，可以看到它的操作数为 `00 00 00 00`。这些二进制文件并不能被执行，需要链接器填入这些地址。
 
-接着，链接器程序`ld`将`main.o`, `sum.o`, `addvec.o`, `multvec.o`以及一些必要的系统目标文件 (比如crti.o,crtbegin.o, crtend.o crtn.o等一些在执行main之前执行的代码的可重定位文件，以及一些运行时需要的库，比如C标准库，这些暂时不深入探讨，可以看下面的链接 **How Initialization Functions Are Handled** ) 组合起来，创建一个可执行的目标文件 prog
+```
+> ld -o prog main.o sum.o addvec.o multvec.o
+ld: warning: cannot find entry symbol _start; defaulting to 0000000000401000
+```
 
-```
-ld -o prog main.o sum.o addvec.o multvec.o
-```
+接着，链接器程序`ld`将`main.o`, `sum.o`, `addvec.o`, `multvec.o`以及一些必要的系统目标文件 (比如crti.o,crtbegin.o, crtend.o crtn.o等一些在执行main之前执行的代码的可重定位文件，以及一些运行时需要的库，比如C标准库，这些暂时不深入探讨，可以看下面的链接 **How Initialization Functions Are Handled** ) 组合起来，创建一个可执行的目标文件 prog。可以看到ld抛出来一条警告，这是因为在链接过程中需要添加前面介绍过的`crti.o`,`crtbegin.o`等一些必要的可重定位目标文件。
 
 当执行该文件的时候，操作系统会调用一个叫做加载器(loader)的函数(比如Linux系统库里面的 execve 函数)。将可执行文件的代码和数据复制到内存，然后跳转到程序的入口地址。
+
+### 二进制文件
+
+
+操作系统支持两种基本的文件类型，文本文件(以文本形式读取信息)与可执行二进制文件(当做可执行文件加载到内存中执行)。
+
+一种比较早的可执行文件格式为COFF(Common Object File Format)。这是UNIX(AT&T UNIX SystemV)中引入的用于描述二进制目标文件的格式规范。尽管 COFF 为目标文件定义了一个很好的框架，比如以前的 a.out 格式改进了很多，但它仍然有一些限制，比如文件中段(section)的数量有最大限制，段的名称也有长度限制，无法支持像 C++语言所需要的符号化调试信息等。因此，每一个采用 COFP 的操作系统厂商几乎都或多或少地对其进行了扩展，Windows的 PE(Portable Executable) 格式扩展了 COFF，AT&T自己又在COFF基础上定义了 ELF (Extensible Linking Format)，ELF 目前被广泛用于各种UNIX 类操作系统，包括 Linux 和 FreeBSD; IBM在AIX中使用 XCOFF; 而Microsoft 则在COFF 格式规范基础上定义了PE 格式。在 Windows 平台上，可执行文件(扩展名为.exe)、目标文件(扩展名为.obj)、动态链接库(扩展名为.dll)以及设备驱动程序(扩展名为.sys)等多种文件类型使用了PE 文件格式。随着 64 位系统的到来，PE文件格式也相应地有了一个扩展的版本，称为 PE32+，允许使用 64 位地址空间。
+
+下面是两张图详细展示了ELF文件与PE文件的结构：
+
+![elf](./img/ELF_101_linux_executable_walk-through.png)
+
+![PE](./img/PE.png)
+
+可以看到，无论是ELF或者PE，它们有着类似的设计。头, 节表 和 节。
+
+**头**
+
+头用来存储该文件的一些基本信息，比如 魔术码，版本号，类型，入口地址(非常重要)等。操作系统的加载器需要读取头的信息，根据头的信息来确定如何加载该文件，如何执行该文件。
+
+可以使用readelf工具来查看ELF文件的头，Windows的PE可以使用`CFF Explorer`等其他工具。
+
+```
+> readelf --headers prog
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x1040
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          14280 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         13
+  Size of section headers:           64 (bytes)
+  Number of section headers:         30
+  Section header string table index: 29
+
+  ......
+
+```
+
+可以看到`Entry point address`的值为 0x1040，该值加上程序映射在内存中的基地址就是程序的起始位置。接下来，我将使用gdb来验证这个过程。
+```
+> gdb prog
+pwndbg> info files
+Symbols from "/root/sources/prog".
+Native process:
+        Using the running image of child Thread 0x7ffff7dc7740 (LWP 1685).
+        While running this, GDB does not access memory from...
+Local exec file:
+        `/root/sources/prog', file type elf64-x86-64.
+        Entry point: 0x555555555040
+```
+0x555555555040 - 0x1040 就是该可执行文件被映射到内存中的位置 0x555555554000。后文会介绍一个非常重要的结构体`struct link_map`，该结构体中的一个`l_addr`存储的地址就是关联的对象(也就是示例中的prog)映射到内存中的位置。
+
+可以使用gdb的bt命令来查看进程的调用栈
+```
+pwndbg> bt
+#0  0x0000555555555129 in main ()
+#1  0x00007ffff7df16ca in __libc_start_call_main (main=main@entry=0x555555555129 <main>, argc=argc@entry=1, argv=argv@entry=0x7fffffffe2d8) at ../sysdeps/nptl/libc_start_call_main.h:58
+#2  0x00007ffff7df1785 in __libc_start_main_impl (main=0x555555555129 <main>, argc=1, argv=0x7fffffffe2d8, init=<optimized out>, fini=<optimized out>, rtld_fini=<optimized out>, 
+    stack_end=0x7fffffffe2c8) at ../csu/libc-start.c:360
+#3  0x0000555555555061 in _start ()
+```
+程序的入口地址其实为 _start，也就是0x555555555040。
+
+```
+pwndbg> disass _start
+Dump of assembler code for function _start:
+   0x0000555555555040 <+0>:     xor    ebp,ebp
+```
+当程序被映射到内存中，将要执行的第一条指令的位置就是0x0000555555555040。
+
+**节表**
+
+节表描述了该文件的节的信息。包括节的名字，比如：'.text', '.data'等，节的类型，偏移地址，和 标志等。下面展示了ELF的几种标志类型。
+```
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), l (large), p (processor specific)
+```
+在分析可执行文件时千万不要仅查看节的名字来确定节的用途，需要根据节的标志位来猜测节的作用。
+可以使用下面的命令来查看一个文件的节表：
+
+一个最基本的程序是由 数据 和 代码 组成的。数据区域可以被读，写，但不能被执行。代码区域可以被读，执行，但不能被随意写入。一些Web业务的漏洞就是没有对数据进行严格的过滤，或者采用了非常糟糕的"黑名单"策略，导致 骇客 可以构造一些特殊的数据，让Web应用程序执行这些被精心构造的数据从而导致敏感信息被窃取。所以，Web业务设计的最基本原则就是 "数据与代码分离"，或者采用"白名单"策略，这些名单应该被严格筛选。同样，二进制安全的一些漏洞也是类似的原理。
+
+```
+> readelf --section-headers prog
+There are 30 section headers, starting at offset 0x37c8:
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  ......
+  [14] .text             PROGBITS         0000000000001040  00001040
+       000000000000018c  0000000000000000  AX       0     0     16
+  ......
+  [24] .data             PROGBITS         0000000000004000  00003000
+       0000000000000020  0000000000000000  WA       0     0     8  
+  ......
+```
+
+可以看到 .text节可以被执行，但不能被写入。而.data只能被写入。
 
 ### 静态链接
 
@@ -1630,6 +1743,11 @@ typedef struct {
 2. **GNU Compiler Collection** https://en.wikipedia.org/wiki/GNU_Compiler_Collection
 3. **How Initialization Functions Are Handled** https://gcc.gnu.org/onlinedocs/gccint/Initialization.html
 
+## 可执行文件
+
+1. **PE Format** https://learn.microsoft.com/en-us/windows/win32/debug/pe-format
+2. **An In-Depth Look into the Win32 Portable Executable File Format** https://learn.microsoft.com/en-us/archive/msdn-magazine/2002/february/inside-windows-win32-portable-executable-file-format-in-detail
+
 ## 静态链接
 
 1. **GNU 链接脚本0 - 链接脚本基本介绍** https://zhuanlan.zhihu.com/p/363308789
@@ -1637,3 +1755,8 @@ typedef struct {
 ## 源代码
 
 1. **glibc elf目录** https://codebrowser.dev/glibc/glibc/elf/
+
+## 参考书籍
+
+1. **Windows内核原理与实现**
+2. **深入理解计算机系统**
