@@ -1,20 +1,47 @@
-# 瞎写
+# 随笔
 
-1. [Windows 对象管理](./WindowsObject/ObjectManagement.md)
-  简单分析了一下Windows内核的对象管理机制，并没有透彻的分析。想彻底讨论完毕需要对Windows内核的一些函数进行一些逆向。其中参考了《Windows内核原理与实现》。
+一些笔记和介绍文档。这些东西会当做讲义在课程上讲解(随缘直播课)。
 
-2. [Windows APC机制分析](./WindowsAPC/apc.md)
-  其实算是学习《Windows内核原理与实现》这本著作的学习笔记，学习过程中配合着泄露的WRK-v1.2源码进行分析。
+普通大学生，喜欢计算机安全的操作系统安全和网络安全。目前还在学习计算机基础课程：
+- [x] 操作系统
+- [ ] 计算机网络
+- [ ] 算法设计与分析
+- [ ] 编译原理
 
-3. [Intel Processor Trace 简单介绍](./IntelPT/main.md)
-  简单写一下Intel Processor Trace技术，其实就是翻译+注解，不过也没写多少，我是AMD CPU。
+**水平有限，有不足之处还请多多指正**。
 
-4. [链接与加载](./linking/linking.md)
-  从编译过程开始讲解操作系统链接与加载的机制。虽然大部分以Linux系统为例子，不过一些思想同样适用于Windows。
+***
 
-水平有限，写不出什么好的文章qwq。
-如果哪里有误，欢迎各位大佬指正。或者对哪里有疑惑，欢迎与我联系。
+## Windows 
+***
+- [x] [Windows 对象管理](./WindowsObject/ObjectManagement.md)
+  分析Windows内核的对象管理机制，其中参考了《Windows内核原理与实现》。
 
-附上一张可爱的斯卡蒂~
+- [x] [Windows APC机制分析](./WindowsAPC/apc.md)
+  分析Windows APC(异步过程调用)机制，其中参考了《Windows内核原理与实现》。
 
-![skadi](skadi.jpg)
+## Linux
+
+***
+[链接与加载](./linking/linking.md)
+介绍链接器与加载器。从传统的静态链接到加载时的共享库的动态链接，以及到运行时的共享库的动态链接。深入探讨了操作系统是如何管理一个程序所需要使用各个库。对可执行目标文件也进行了一些讨论，介绍了ELF文件与Windows PE文件。一些章节会有对 `Glibc` 库源码的分析，更深入的分析操作系统的工作。虽然大部分以Linux系统为例子，不过一些思想在Windows也同样适用。
+
+**基础部分**
+- [x] 编译过程
+- [ ] 二进制文件
+- [ ] 静态链接
+- [ ] 动态链接
+
+**进阶部分**
+- [x] dlopen源码分析
+- [ ] dlsym源码分析
+
+**高阶部分**
+- [ ] PIC(位置无关代码)与延迟绑定
+
+## 处理器架构
+
+***
+- [ ] [Intel Processor Trace 简单介绍](./IntelPT/main.md)
+  介绍Intel Processor Trace技术。
+
